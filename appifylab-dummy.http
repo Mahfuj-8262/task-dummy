@@ -1,0 +1,6 @@
+@appifylab_dummy_HostAddress = http://localhost:5049
+
+GET {{appifylab_dummy_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
