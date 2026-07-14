@@ -9,10 +9,14 @@ namespace Appifylab.Services;
 public class PostService : IPostService
 {
     private readonly AppDbContext _db;
+    private readonly IImageStorageService _imageStorage;
+    private readonly ILogger<PostService> _logger;
 
-    public PostService(AppDbContext db)
+    public PostService(AppDbContext db, IImageStorageService imageStorage, ILogger<PostService> logger)
     {
         _db = db;
+        _imageStorage = imageStorage;
+        _logger = logger;
     }
 
     public async Task<PostResponse> CreatePostAsync(Guid userId, string content, PostVisibility visibility, string? imageUrl)
@@ -220,8 +224,24 @@ public class PostService : IPostService
         if (post.UserId != userId)
             throw new ForbiddenException("You can only delete your own posts.");
 
+        var imageUrl = post.ImageUrl;
+
         _db.Posts.Remove(post); // cascades to Comments, Likes, CommentLikes via FK config
         await _db.SaveChangesAsync();
+
+        // Best-effort S3 cleanup: an orphaned object is far less harmful than failing the
+        // delete after the row is already gone, so swallow storage errors and just log them.
+        if (!string.IsNullOrEmpty(imageUrl))
+        {
+            try
+            {
+                await _imageStorage.DeleteAsync(imageUrl);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to delete S3 image {ImageUrl} for post {PostId}.", imageUrl, postId);
+            }
+        }
     }
 
     public async Task DeleteCommentAsync(Guid userId, Guid commentId)

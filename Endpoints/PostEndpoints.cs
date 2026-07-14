@@ -15,7 +15,7 @@ public static class PostEndpoints
     {
         var posts = app.MapGroup("/api/posts").RequireAuthorization().WithTags("Posts");
 
-        posts.MapPost("/", async (HttpRequest request, IPostService svc, ClaimsPrincipal user, IWebHostEnvironment env) =>
+        posts.MapPost("/", async (HttpRequest request, IPostService svc, ClaimsPrincipal user, IImageStorageService imageStorage) =>
         {
             if (!request.HasFormContentType)
                 return Results.BadRequest(new { message = "Expected multipart/form-data." });
@@ -39,16 +39,9 @@ public static class PostEndpoints
                 if (!AllowedImageTypes.Contains(file.ContentType))
                     return Results.BadRequest(new { message = "Unsupported image type." });
 
-                var uploadsDir = Path.Combine(env.WebRootPath ?? "wwwroot", "uploads");
-                Directory.CreateDirectory(uploadsDir);
-
-                var fileName = $"{Guid.CreateVersion7()}{Path.GetExtension(file.FileName)}";
-                var fullPath = Path.Combine(uploadsDir, fileName);
-
-                await using var stream = File.Create(fullPath);
-                await file.CopyToAsync(stream);
-
-                imageUrl = $"/uploads/{fileName}";
+                await using var stream = file.OpenReadStream();
+                var extension = Path.GetExtension(file.FileName);
+                imageUrl = await imageStorage.UploadAsync(stream, file.ContentType, extension, request.HttpContext.RequestAborted);
             }
 
             var result = await svc.CreatePostAsync(user.GetUserId(), content, visibility, imageUrl);

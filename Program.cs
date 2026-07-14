@@ -1,6 +1,9 @@
 using System.Text;
+using Amazon;
+using Amazon.S3;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 using Appifylab.Common;
@@ -45,9 +48,29 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
+// --- AWS S3 image storage ---
+builder.Services.Configure<S3Settings>(builder.Configuration.GetSection("S3"));
+builder.Services.AddSingleton<IAmazonS3>(sp =>
+{
+    var s3 = sp.GetRequiredService<IOptions<S3Settings>>().Value;
+
+    var config = new AmazonS3Config { RegionEndpoint = RegionEndpoint.GetBySystemName(s3.Region) };
+    if (!string.IsNullOrWhiteSpace(s3.ServiceUrl)) // LocalStack/MinIO for local dev
+    {
+        config.ServiceURL = s3.ServiceUrl;
+        config.ForcePathStyle = true;
+    }
+
+    // Explicit keys only for local dev; otherwise use the default AWS credential chain (IAM role, env vars, ~/.aws).
+    return !string.IsNullOrWhiteSpace(s3.AccessKey) && !string.IsNullOrWhiteSpace(s3.SecretKey)
+        ? new AmazonS3Client(s3.AccessKey, s3.SecretKey, config)
+        : new AmazonS3Client(config);
+});
+
 // --- App services ---
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IImageStorageService, S3ImageStorageService>();
 builder.Services.AddScoped<IPostService, PostService>();
 
 // --- CORS: needed so the browser sends/receives the refresh-token cookie cross-origin ---
@@ -80,7 +103,8 @@ app.UseCors(CorsPolicy);
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.UseStaticFiles(); // ADDED: serves /uploads/* from wwwroot
+// Images are stored in and served from Amazon S3 (optionally fronted by CloudFront),
+// so the app no longer serves uploads off local disk.
 
 app.MapAuthEndpoints();
 app.MapPostEndpoints(); // ADDED
