@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("appifylab-dummy")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+fab098f1dd37dc40b5271b9edccc8bc1b29d6e25")]
 [assembly: System.Reflection.AssemblyProductAttribute("appifylab-dummy")]
 [assembly: System.Reflection.AssemblyTitleAttribute("appifylab-dummy")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

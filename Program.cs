@@ -29,6 +29,7 @@ if (string.IsNullOrWhiteSpace(jwtSettings.Secret) || Encoding.UTF8.GetByteCount(
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
+        options.MapInboundClaims = false;
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
@@ -47,6 +48,7 @@ builder.Services.AddAuthorization();
 // --- App services ---
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IPostService, PostService>();
 
 // --- CORS: needed so the browser sends/receives the refresh-token cookie cross-origin ---
 const string CorsPolicy = "Frontend";
@@ -78,6 +80,9 @@ app.UseCors(CorsPolicy);
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.UseStaticFiles(); // ADDED: serves /uploads/* from wwwroot
+
 app.MapAuthEndpoints();
+app.MapPostEndpoints(); // ADDED
 
 app.Run();

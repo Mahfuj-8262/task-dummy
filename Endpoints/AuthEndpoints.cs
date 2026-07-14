@@ -40,7 +40,7 @@ public static class AuthEndpoints
                 SetRefreshCookie(ctx, env, rawRefresh, refreshExpiresAt);
                 return Results.Ok(response);
             }
-            catch (AuthenticationFailedException ex)
+            catch (AuthenticationFailedException)
             {
                 return Results.Unauthorized();
             }

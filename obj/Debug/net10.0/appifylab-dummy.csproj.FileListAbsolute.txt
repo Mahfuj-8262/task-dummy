@@ -129,3 +129,5 @@
 /home/technonext/assessments/appifylab-dummy/bin/Debug/net10.0/Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
 /home/technonext/assessments/appifylab-dummy/bin/Debug/net10.0/Microsoft.IdentityModel.Tokens.dll
 /home/technonext/assessments/appifylab-dummy/bin/Debug/net10.0/System.IdentityModel.Tokens.Jwt.dll
+/home/technonext/assessments/appifylab-dummy/obj/Debug/net10.0/appifylab-dummy.sourcelink.json
+/home/technonext/assessments/appifylab-dummy/bin/Debug/net10.0/appifylab-dummy.staticwebassets.runtime.json
